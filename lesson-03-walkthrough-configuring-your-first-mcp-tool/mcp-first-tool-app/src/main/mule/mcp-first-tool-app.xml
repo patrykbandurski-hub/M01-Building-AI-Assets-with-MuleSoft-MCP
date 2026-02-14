@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:mcp="http://www.mulesoft.org/schema/mule/mcp" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd  http://www.mulesoft.org/schema/mule/mcp http://www.mulesoft.org/schema/mule/mcp/current/mule-mcp.xsd  http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+	http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+    <http:listener-config name="Listener-config">
+        <http:listener-connection host="0.0.0.0" port="8081"></http:listener-connection>
+    </http:listener-config>
+    <mcp:server-config name="mule-mcp-server" serverName="mule-mcp-server" serverVersion="1.0.0">
+        <mcp:streamable-http-server-connection listenerConfig="Listener-config"></mcp:streamable-http-server-connection>
+    </mcp:server-config>
+    <flow name="mcp-first-tool-flow">
+        <mcp:tool-listener doc:name="get-incident-details" config-ref="mule-mcp-server" name="Get incident details">
+            <mcp:description><![CDATA[Retrieves the details of a specific ServiceNow incident using its sys_id.]]></mcp:description>
+            <mcp:parameters-schema><![CDATA[{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "object",
+	"properties": {
+		"sys_id": {
+			"type": "string",
+			"description": "The unique identifier (sys_id) of a ServiceNow record.",
+			"example": "abc"
+		}
+	},
+	"required": [
+		"sys_id"
+	
+}]]></mcp:parameters-schema>
+            <mcp:responses>
+                <mcp:text-tool-response-content text="#[payload.^raw]"/>
+            </mcp:responses>
+            <mcp:on-error-responses>
+                <mcp:text-tool-response-content text="Please try again! We could not get details of your incident."/>
+            </mcp:on-error-responses>    
+        </mcp:tool-listener>
+        <ee:transform doc:name="Get Details Transformation" doc:id="tiabwf" >
+            <ee:message >
+                <ee:set-payload doc:name="Set payload" doc:id="qkdcna" ><![CDATA[%dw 2.0
+        output application/json
+        ---
+{
+    incident_details: {
+        sys_id: payload.sys_id,
+        number: "INC0010012",
+        state: "2",
+        short_description: "Email server is slow"
+    }
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+   
+    </flow>
+</mule>
