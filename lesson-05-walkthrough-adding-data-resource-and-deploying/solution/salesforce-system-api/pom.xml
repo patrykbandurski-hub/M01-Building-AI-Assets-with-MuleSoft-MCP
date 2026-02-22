@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>io.integrationtrails</groupId>
+    <groupId>b9e77a07-589b-4461-aa60-5f8ca0b647fb</groupId>
     <artifactId>salesforce-system-api</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <packaging>mule-application</packaging>
     <name>salesforce-system-api</name>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <mule.maven.plugin.version>4.7.0</mule.maven.plugin.version>
+        <mule.maven.plugin.version>4.0.0</mule.maven.plugin.version>
     <app.runtime>4.11.0</app.runtime></properties>
     <build>
         <plugins>

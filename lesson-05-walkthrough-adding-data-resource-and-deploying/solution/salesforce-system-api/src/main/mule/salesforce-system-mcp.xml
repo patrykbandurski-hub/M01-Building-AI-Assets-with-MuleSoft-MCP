@@ -1,0 +1,145 @@
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:mcp="http://www.mulesoft.org/schema/mule/mcp" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="                http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd                http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd                http://www.mulesoft.org/schema/mule/mcp http://www.mulesoft.org/schema/mule/mcp/current/mule-mcp.xsd                http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+    <mcp:server-config name="mule-mcp-server" serverName="mule-mcp-server" serverVersion="1.0.0">
+        <mcp:streamable-http-server-connection listenerConfig="http-listener-config"></mcp:streamable-http-server-connection>
+    </mcp:server-config>
+    <flow name="createCaseFlow">
+        <mcp:tool-listener config-ref="mule-mcp-server" name="create_case">
+            <mcp:description>
+                <![CDATA[Creates a new case in Salesforce.]]>
+            </mcp:description>
+            <mcp:parameters-schema>
+                <![CDATA[{
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "properties": {
+                    "subject": {
+                        "type": "string",
+                        "description": "The subject of the case."
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "The description of the case."
+                    }
+                },
+                "required": ["subject", "description"]
+            }]]>
+            </mcp:parameters-schema>
+            <mcp:responses>
+                <mcp:text-tool-response-content text="#[payload.^raw]"></mcp:text-tool-response-content>
+            </mcp:responses>
+            <mcp:on-error-responses>
+                <mcp:text-tool-response-content text="Please try again! We could not create the case."></mcp:text-tool-response-content>
+            </mcp:on-error-responses>
+        </mcp:tool-listener>
+
+        <flow-ref name="post:\cases:api-config"></flow-ref>
+    </flow>
+    <flow name="getCaseDetailsFlow">
+        <mcp:tool-listener config-ref="mule-mcp-server" name="get_case_details">
+            <mcp:description>
+                <![CDATA[Retrieves the details of a specific Salesforce case.]]>
+            </mcp:description>
+            <mcp:parameters-schema>
+                <![CDATA[{
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "properties": {
+                    "caseNumber": {
+                        "type": "string",
+                        "description": "The case number of the Salesforce case."
+                    }
+                },
+                "required": ["caseNumber"]
+            }]]>
+            </mcp:parameters-schema>
+            <mcp:responses>
+                <mcp:text-tool-response-content text="#[payload.^raw]"></mcp:text-tool-response-content>
+            </mcp:responses>
+            <mcp:on-error-responses>
+                <mcp:text-tool-response-content text="Please try again! We could not get details for your case."></mcp:text-tool-response-content>
+            </mcp:on-error-responses>
+        </mcp:tool-listener>
+        <ee:transform doc:name="Set caseNumber">
+            <ee:message></ee:message>
+            <ee:variables>
+                <ee:set-variable variableName="caseNumber">
+                    <![CDATA[%dw 2.0
+output application/java
+---
+{
+    caseNumber: payload.caseNumber
+}]]>
+                </ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <flow-ref name="get:\cases\(caseNumber):api-config"></flow-ref>
+    </flow>
+    <flow name="updateCaseFlow">
+        <mcp:tool-listener config-ref="mule-mcp-server" name="update_case">
+            <mcp:description>
+                <![CDATA[Updates an existing Salesforce case.]]>
+            </mcp:description>
+            <mcp:parameters-schema>
+                <![CDATA[{
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "properties": {
+                    "caseNumber": {
+                        "type": "string",
+                        "description": "The case number of the Salesforce case to update."
+                    },
+                    "newStatus": {
+                        "type": "string",
+                        "description": "The new status of the case."
+                    }
+                },
+                "required": ["caseNumber", "newStatus"]
+            }]]>
+            </mcp:parameters-schema>
+            <mcp:responses>
+                <mcp:text-tool-response-content text="#[payload.^raw]"></mcp:text-tool-response-content>
+            </mcp:responses>
+            <mcp:on-error-responses>
+                <mcp:text-tool-response-content text="Please try again! We could not update the case."></mcp:text-tool-response-content>
+            </mcp:on-error-responses>
+        </mcp:tool-listener>
+        <ee:transform doc:name="Set caseNumber and Payload">
+            <ee:message>
+                <ee:set-payload>
+                    <![CDATA[%dw 2.0
+output application/json
+---
+{
+    newStatus: payload.newStatus
+}]]>
+                </ee:set-payload>
+            </ee:message>
+            <ee:variables>
+                <ee:set-variable variableName="caseNumber">
+                    <![CDATA[%dw 2.0
+output application/java
+---
+{
+    caseNumber: payload.caseNumber
+}]]>
+                </ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <flow-ref name="patch:\cases\(caseNumber):api-config"></flow-ref>
+    </flow>
+
+    <flow name="getIncidentGuideResourceFlow">
+        <mcp:resource-listener uri="file:///ResourceSweetSupportIncidentHandlingGuide.txt" resourceMimeType="text/plain" name="incident_guide_md" config-ref="mule-mcp-server">
+            <mcp:description>
+                <![CDATA[A text document explaing incident handling and faq for agents.]]>
+            </mcp:description>
+            <mcp:resource-listener-content>
+                <mcp:text-resource text="#[payload]" />
+            </mcp:resource-listener-content>
+        </mcp:resource-listener>
+        <ee:cache doc:name="Cache" doc:id="rwjdqe" filterExpression="#[true]">
+            <http:request doc:name="Get Incident Guide File" doc:id="nqfopc" url="https://drive.google.com/uc?export=download&amp;id=1pt88mqfE7tnbfwNKATG-Jf9Ep7UsfLSA" />
+        </ee:cache>
+    </flow>
+
+</mule>

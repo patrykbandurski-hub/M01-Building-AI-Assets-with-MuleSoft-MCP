@@ -1,0 +1,7 @@
+{
+  "applicationName": "salesforce-system-api",
+  "runtime": "4.9.8:6e-java17",
+  "replicas": 1,
+  "replicaSize": "0.1",
+  "deploymentModel": "rolling"
+}
